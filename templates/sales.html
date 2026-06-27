@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sales Voucher - SmartERP</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; }
+        .navbar { background: #1a237e; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: white; text-decoration: none; font-size: 14px; }
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 10px; padding: 25px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { color: #1a237e; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        button { background: #1a237e; color: white; padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #283593; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1a237e; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        .success { background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: none; }
+        .result { background: #e3f2fd; color: #1565c0; padding: 15px; border-radius: 6px; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <h1>💼 SmartERP</h1>
+    <a href="/">← Back to Dashboard</a>
+</div>
+<div class="container">
+    <div class="card">
+        <h2>🧾 Create Sales Voucher</h2>
+        <div class="success" id="success">Sale recorded successfully!</div>
+        <div class="form-group"><label>Customer</label><select id="customer"></select></div>
+        <div class="form-group"><label>Stock Item</label><select id="item"></select></div>
+        <div class="form-group"><label>Quantity</label><input type="number" id="quantity" placeholder="Enter quantity" min="1"></div>
+        <button onclick="createSale()">Record Sale</button>
+        <div class="result" id="result"></div>
+    </div>
+    <div class="card">
+        <h2>🧾 All Sales</h2>
+        <table>
+            <thead><tr><th>ID</th><th>Customer ID</th><th>Item ID</th><th>Quantity</th><th>Total Amount</th></tr></thead>
+            <tbody id="sales-table"></tbody>
+        </table>
+    </div>
+</div>
+<script>
+    fetch('/ledgers').then(r => r.json()).then(data => {
+        const sel = document.getElementById('customer');
+        data.filter(l => l.type === 'customer').forEach(l => sel.innerHTML += `<option value="${l.id}">${l.name}</option>`);
+    });
+    fetch('/stocks').then(r => r.json()).then(data => {
+        const sel = document.getElementById('item');
+        data.forEach(i => sel.innerHTML += `<option value="${i.id}">${i.name} (Stock: ${i.quantity})</option>`);
+    });
+    function loadSales() {
+        fetch('/sales').then(r => r.json()).then(data => {
+            document.getElementById('sales-table').innerHTML = data.map(s => `<tr><td>${s.id}</td><td>${s.customer_id}</td><td>${s.item_id}</td><td>${s.quantity}</td><td>₹${s.total_amount}</td></tr>`).join('');
+        });
+    }
+    function createSale() {
+        const data = { customer_id: parseInt(document.getElementById('customer').value), item_id: parseInt(document.getElementById('item').value), quantity: parseInt(document.getElementById('quantity').value) };
+        fetch('/sale', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
+        .then(r => r.json()).then(res => {
+            document.getElementById('success').style.display = 'block';
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').innerHTML = `Total Amount: ₹${res.total_amount} | Remaining Stock: ${res.remaining_stock} | Customer Balance: ₹${res.customer_balance}`;
+            loadSales();
+        });
+    }
+    loadSales();
+</script>
+</body>
+</html>

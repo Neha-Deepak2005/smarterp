@@ -21,5 +21,21 @@ with app.app_context():
 def home():
     return render_template('index.html')
 
+@app.route('/ledgers-page')
+def ledgers_page():
+    return render_template('ledgers.html')
+
+@app.route('/stocks-page')
+def stocks_page():
+    return render_template('stocks.html')
+
+@app.route('/sales-page')
+def sales_page():
+    return render_template('sales.html')
+
+@app.route('/purchases-page')
+def purchases_page():
+    return render_template('purchases.html')
+
 if __name__ == '__main__':
     app.run(debug=True)

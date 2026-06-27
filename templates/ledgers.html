@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ledgers - SmartERP</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; }
+        .navbar { background: #1a237e; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: white; text-decoration: none; font-size: 14px; }
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 10px; padding: 25px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { color: #1a237e; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        button { background: #1a237e; color: white; padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #283593; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1a237e; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f5f5f5; }
+        .success { background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: none; }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <h1>💼 SmartERP</h1>
+    <a href="/">← Back to Dashboard</a>
+</div>
+<div class="container">
+    <div class="card">
+        <h2>➕ Add Ledger</h2>
+        <div class="success" id="success">Ledger created successfully!</div>
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="name" placeholder="e.g. Rahul Traders">
+        </div>
+        <div class="form-group">
+            <label>Type</label>
+            <select id="type">
+                <option value="customer">Customer</option>
+                <option value="supplier">Supplier</option>
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Opening Balance (₹)</label>
+            <input type="number" id="balance" placeholder="0" value="0">
+        </div>
+        <button onclick="createLedger()">Create Ledger</button>
+    </div>
+    <div class="card">
+        <h2>📒 All Ledgers</h2>
+        <table>
+            <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Balance (₹)</th></tr></thead>
+            <tbody id="ledger-table"></tbody>
+        </table>
+    </div>
+</div>
+<script>
+    function loadLedgers() {
+        fetch('/ledgers').then(r => r.json()).then(data => {
+            const tbody = document.getElementById('ledger-table');
+            tbody.innerHTML = data.map(l => `<tr><td>${l.id}</td><td>${l.name}</td><td>${l.type}</td><td>₹${l.balance}</td></tr>`).join('');
+        });
+    }
+    function createLedger() {
+        const data = { name: document.getElementById('name').value, ledger_type: document.getElementById('type').value, balance: parseFloat(document.getElementById('balance').value) };
+        fetch('/ledger', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
+        .then(r => r.json()).then(() => { document.getElementById('success').style.display = 'block'; loadLedgers(); });
+    }
+    loadLedgers();
+</script>
+</body>
+</html>
