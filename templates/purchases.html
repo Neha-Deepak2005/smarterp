@@ -47,21 +47,32 @@
     </div>
 </div>
 <script>
+    let ledgerNames = {};
+    let stockNames = {};
+
     fetch('/ledgers').then(r => r.json()).then(data => {
         const sel = document.getElementById('supplier');
+        data.forEach(l => ledgerNames[l.id] = l.name);
         data.filter(l => l.type === 'supplier').forEach(l => sel.innerHTML += `<option value="${l.id}">${l.name}</option>`);
+        loadPurchases();
     });
+
     fetch('/stocks').then(r => r.json()).then(data => {
         const sel = document.getElementById('item');
+        data.forEach(i => stockNames[i.id] = i.name);
         data.forEach(i => sel.innerHTML += `<option value="${i.id}">${i.name} (Stock: ${i.quantity})</option>`);
     });
+
     function loadPurchases() {
         fetch('/purchases').then(r => r.json()).then(data => {
-            document.getElementById('purchases-table').innerHTML = data.map(p => `<tr><td>${p.id}</td><td>${p.supplier_id}</td><td>${p.item_id}</td><td>${p.quantity}</td><td>₹${p.total_amount}</td></tr>`).join('');
+            document.getElementById('purchases-table').innerHTML = data.map(p => `<tr><td>${p.id}</td><td>${ledgerNames[p.supplier_id] || p.supplier_id}</td><td>${stockNames[p.item_id] || p.item_id}</td><td>${p.quantity}</td><td>₹${p.total_amount}</td><td><button onclick="deletePurchase(${p.id})" style="background:#dc3545; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">🗑️ Delete</button></td></tr>`).join('');
         });
     }
+
     function createPurchase() {
-        const data = { supplier_id: parseInt(document.getElementById('supplier').value), item_id: parseInt(document.getElementById('item').value), quantity: parseInt(document.getElementById('quantity').value) };
+        const qty = parseInt(document.getElementById('quantity').value);
+        if (!qty || qty < 1) { alert('⚠️ Please enter a valid quantity!'); return; }
+        const data = { supplier_id: parseInt(document.getElementById('supplier').value), item_id: parseInt(document.getElementById('item').value), quantity: qty };
         fetch('/purchase', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
         .then(r => r.json()).then(res => {
             document.getElementById('success').style.display = 'block';
@@ -70,6 +81,12 @@
             loadPurchases();
         });
     }
+
+    function deletePurchase(id) {
+        if (!confirm('Delete this purchase? Stock will be reduced.')) return;
+        fetch('/purchase/delete/' + id, { method: 'POST' }).then(() => loadPurchases());
+    }
+
     loadPurchases();
 </script>
 </body>

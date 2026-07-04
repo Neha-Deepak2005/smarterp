@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - SmartERP</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a237e; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-card { background: white; border-radius: 12px; padding: 40px; width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        h1 { color: #1a237e; text-align: center; margin-bottom: 5px; }
+        p { text-align: center; color: #777; margin-bottom: 25px; font-size: 14px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
+        button { width: 100%; background: #1a237e; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; }
+        button:hover { background: #283593; }
+        .error { background: #fdecea; color: #c0392b; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1>💼 SmartERP</h1>
+        <p>Billing, Inventory & Accounting System</p>
+        {% if error %}<div class="error">⚠️ {{ error }}</div>{% endif %}
+        <form method="POST" action="/login">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Enter username" required>
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter password" required>
+            <button type="submit">🔐 Login</button>
+        </form>
+    </div>
+</body>
+</html>

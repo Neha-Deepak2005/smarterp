@@ -54,23 +54,46 @@
     <div class="card">
         <h2>📒 All Ledgers</h2>
         <table>
-            <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Balance (₹)</th></tr></thead>
+            <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Balance (₹)</th><th>Actions</th></tr></thead>
             <tbody id="ledger-table"></tbody>
         </table>
     </div>
 </div>
 <script>
+    let allLedgers = [];
+
     function loadLedgers() {
         fetch('/ledgers').then(r => r.json()).then(data => {
+            allLedgers = data;
             const tbody = document.getElementById('ledger-table');
-            tbody.innerHTML = data.map(l => `<tr><td>${l.id}</td><td>${l.name}</td><td>${l.type}</td><td>₹${l.balance}</td></tr>`).join('');
+            tbody.innerHTML = data.map(l => `<tr><td>${l.id}</td><td>${l.name}</td><td>${l.type}</td><td>₹${l.balance}</td><td><button onclick="editLedger(${l.id})" style="background:#0d6efd; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; margin-right:6px;">✏️ Edit</button><button onclick="deleteLedger(${l.id})" style="background:#dc3545; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">🗑️ Delete</button></td></tr>`).join('');
         });
     }
+
     function createLedger() {
-        const data = { name: document.getElementById('name').value, ledger_type: document.getElementById('type').value, balance: parseFloat(document.getElementById('balance').value) };
+        const name = document.getElementById('name').value.trim();
+        if (!name) { alert('⚠️ Please enter a name!'); return; }
+        const data = { name: name, ledger_type: document.getElementById('type').value, balance: parseFloat(document.getElementById('balance').value) || 0 };
         fetch('/ledger', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
-        .then(r => r.json()).then(() => { document.getElementById('success').style.display = 'block'; loadLedgers(); });
+        .then(r => r.json()).then(() => { document.getElementById('success').style.display = 'block'; document.getElementById('name').value = ''; loadLedgers(); });
     }
+
+    function editLedger(id) {
+        const l = allLedgers.find(x => x.id === id);
+        const newName = prompt('Edit name:', l.name);
+        if (newName === null || newName.trim() === '') return;
+        const newBalance = prompt('Edit balance (₹):', l.balance);
+        if (newBalance === null) return;
+        fetch('/ledger/edit/' + id, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: newName.trim(), balance: parseFloat(newBalance) || 0 }) })
+        .then(() => loadLedgers());
+    }
+
+    function deleteLedger(id) {
+        if (!confirm('Delete this ledger?')) return;
+        fetch('/ledger/delete/' + id, { method: 'POST' })
+        .then(() => loadLedgers());
+    }
+
     loadLedgers();
 </script>
 </body>

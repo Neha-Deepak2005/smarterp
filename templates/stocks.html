@@ -45,7 +45,7 @@
     <div class="card">
         <h2>📦 All Stock Items</h2>
         <table>
-            <thead><tr><th>ID</th><th>Name</th><th>SKU</th><th>Purchase Price</th><th>Selling Price</th><th>Quantity</th></tr></thead>
+            <thead><tr><th>ID</th><th>Name</th><th>SKU</th><th>Purchase Price</th><th>Selling Price</th><th>Quantity</th><th>Actions</th></tr></thead>
             <tbody id="stock-table"></tbody>
         </table>
     </div>
@@ -54,13 +54,19 @@
     function loadStocks() {
         fetch('/stocks').then(r => r.json()).then(data => {
             const tbody = document.getElementById('stock-table');
-            tbody.innerHTML = data.map(i => `<tr><td>${i.id}</td><td>${i.name}</td><td>${i.sku}</td><td>₹${i.purchase_price}</td><td>₹${i.selling_price}</td><td>${i.quantity}</td></tr>`).join('');
+            tbody.innerHTML = data.map(i => `<tr><td>${i.id}</td><td>${i.name}</td><td>${i.sku}</td><td>₹${i.purchase_price}</td><td>₹${i.selling_price}</td><td>${i.quantity}</td><td><button onclick="deleteStock(${i.id})" style="background:#dc3545; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">🗑️ Delete</button></td></tr>`).join('');
         });
     }
     function createStock() {
-        const data = { name: document.getElementById('name').value, sku: document.getElementById('sku').value, purchase_price: parseFloat(document.getElementById('purchase_price').value), selling_price: parseFloat(document.getElementById('selling_price').value), quantity: parseInt(document.getElementById('quantity').value) };
+        const name = document.getElementById('name').value.trim();
+        if (!name) { alert('⚠️ Please enter an item name!'); return; }
+        const data = { name: name, sku: document.getElementById('sku').value, purchase_price: parseFloat(document.getElementById('purchase_price').value) || 0, selling_price: parseFloat(document.getElementById('selling_price').value) || 0, quantity: parseInt(document.getElementById('quantity').value) || 0 };
         fetch('/stock', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
-        .then(r => r.json()).then(() => { document.getElementById('success').style.display = 'block'; loadStocks(); });
+        .then(r => r.json()).then(() => { document.getElementById('success').style.display = 'block'; document.getElementById('name').value = ''; loadStocks(); });
+    }
+    function deleteStock(id) {
+        if (!confirm('Delete this stock item?')) return;
+        fetch('/stock/delete/' + id, { method: 'POST' }).then(() => loadStocks());
     }
     loadStocks();
 </script>

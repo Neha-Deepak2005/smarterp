@@ -47,21 +47,32 @@
     </div>
 </div>
 <script>
+    let ledgerNames = {};
+    let stockNames = {};
+
     fetch('/ledgers').then(r => r.json()).then(data => {
         const sel = document.getElementById('customer');
+        data.forEach(l => ledgerNames[l.id] = l.name);
         data.filter(l => l.type === 'customer').forEach(l => sel.innerHTML += `<option value="${l.id}">${l.name}</option>`);
+        loadSales();
     });
+
     fetch('/stocks').then(r => r.json()).then(data => {
         const sel = document.getElementById('item');
+        data.forEach(i => stockNames[i.id] = i.name);
         data.forEach(i => sel.innerHTML += `<option value="${i.id}">${i.name} (Stock: ${i.quantity})</option>`);
     });
+
     function loadSales() {
         fetch('/sales').then(r => r.json()).then(data => {
-            document.getElementById('sales-table').innerHTML = data.map(s => `<tr><td>${s.id}</td><td>${s.customer_id}</td><td>${s.item_id}</td><td>${s.quantity}</td><td>₹${s.total_amount}</td></tr>`).join('');
+            document.getElementById('sales-table').innerHTML = data.map(s => `<tr><td>${s.id}</td><td>${ledgerNames[s.customer_id] || s.customer_id}</td><td>${stockNames[s.item_id] || s.item_id}</td><td>${s.quantity}</td><td>₹${s.total_amount}</td><td><button onclick="deleteSale(${s.id})" style="background:#dc3545; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">🗑️ Delete</button></td></tr>`).join('');
         });
     }
+
     function createSale() {
-        const data = { customer_id: parseInt(document.getElementById('customer').value), item_id: parseInt(document.getElementById('item').value), quantity: parseInt(document.getElementById('quantity').value) };
+        const qty = parseInt(document.getElementById('quantity').value);
+        if (!qty || qty < 1) { alert('⚠️ Please enter a valid quantity!'); return; }
+        const data = { customer_id: parseInt(document.getElementById('customer').value), item_id: parseInt(document.getElementById('item').value), quantity: qty };
         fetch('/sale', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
         .then(r => r.json()).then(res => {
             document.getElementById('success').style.display = 'block';
@@ -70,6 +81,12 @@
             loadSales();
         });
     }
+
+    function deleteSale(id) {
+        if (!confirm('Delete this sale? Stock will be restored.')) return;
+        fetch('/sale/delete/' + id, { method: 'POST' }).then(() => loadSales());
+    }
+
     loadSales();
 </script>
 </body>
